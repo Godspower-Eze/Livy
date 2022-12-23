@@ -40,7 +40,7 @@ class Livepeer {
 
   async getStreams(_axiosInstance: AxiosInstance) {
     try {
-      const res = await _axiosInstance.get("stream");
+      const res = await _axiosInstance.get("stream?streamsonly=1");
       return res.data;
     } catch (err) {
       console.error(err);

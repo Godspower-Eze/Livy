@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useBalance } from 'wagmi'
 
 import Head from 'next/head'
 
@@ -10,27 +10,46 @@ import {
   FormControl,
   Input,
   Button,
-  Card,
-  Image,
-  Stack,
-  CardBody,
-  Heading,
-  CardFooter,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
 } from '@chakra-ui/react'
 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { Player } from '@livepeer/react'
+
+import Stream from '../components/Stream'
+
+const numeral = require('numeral')
+
+const LIVY_TOKEN_ADDRESS = '0xd78F8d01516086676ae7Bf3dA0375C2CaC7ff550'
 
 export default function Home() {
   const { address, isConnected } = useAccount()
+
+  // Gets the token balance
+  const [balanceObj, setBalanceObj] = useState({
+    balance: '',
+    available: false,
+  })
+
+  const { data, isSuccess } = useBalance({
+    address,
+    token: LIVY_TOKEN_ADDRESS,
+  })
+
+  useEffect(() => {
+    if (isSuccess && isConnected) {
+      const balance: string = numeral(
+        data?.value.div('1000000000000000000'),
+      ).format('0,0')
+      setBalanceObj({
+        balance,
+        available: true,
+      })
+    } else {
+      setBalanceObj({
+        balance: '',
+        available: false,
+      })
+    }
+  }, [isSuccess, data?.value, isConnected])
 
   // Handling starting of stream -- starts here
   const [startLivestreamObject, setStartLivestreamObject] = useState({
@@ -73,7 +92,7 @@ export default function Home() {
   }
   // Handling starting of stream -- ends here
 
-  // Handling get of streams - starts here
+  // Handling getting of streams - starts here
   const [streams, setStreams] = useState([])
   const [streamsNotEmpty, setstreamsNotEmpty] = useState(false)
 
@@ -85,6 +104,7 @@ export default function Home() {
         const _cleanedStreams: [] = data.map((value: { name: string }) => ({
           ...value,
           name: value.name.split('_')[0],
+          address: value.name.split('_')[1],
         }))
         const __cleanedStreams = _cleanedStreams.filter(
           (value: { isActive: boolean }) => {
@@ -92,6 +112,7 @@ export default function Home() {
           },
         )
         setStreams(__cleanedStreams)
+        console.log(__cleanedStreams)
         if (__cleanedStreams.length !== 0) {
           setstreamsNotEmpty(true)
         } else {
@@ -99,13 +120,7 @@ export default function Home() {
         }
       })
   }, [])
-  // Handling get of streams - ends here
-
-  // Handling joining a stream - starts here
-
-  const { isOpen, onOpen, onClose } = useDisclosure()
-
-  // Handling joining a stream - ends here
+  // Handling getting of streams - ends here
 
   return (
     <Container maxW="960px" bg="white">
@@ -122,6 +137,18 @@ export default function Home() {
       </Box>
       <Box margin="6" bg="#ededed" borderRadius={10}>
         <Box padding={4}>
+          {balanceObj.available ? (
+            <Text
+              fontSize="1xl"
+              fontFamily="mono"
+              marginLeft="2"
+              marginBottom="3"
+            >
+              SLT Balance: {balanceObj.balance}
+            </Text>
+          ) : (
+            ''
+          )}
           <Text
             fontSize="2xl"
             fontFamily="mono"
@@ -178,62 +205,18 @@ export default function Home() {
       {streamsNotEmpty ? (
         <Box margin="6">
           {streams.map(
-            (value: { id: string; name: string; playbackId: string }) => (
-              <Card
-                direction={{ base: 'column', sm: 'row' }}
-                overflow="hidden"
-                variant="outline"
-                marginTop="8"
-                key={value.id!}
-              >
-                <Image
-                  objectFit="cover"
-                  maxW={{ base: '100%', sm: '200px' }}
-                  src="https://images.unsplash.com/photo-1611162616475-46b635cb6868?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2874&q=80"
-                  alt="Video Icon"
-                />
-                <Stack>
-                  <CardBody>
-                    <Heading size="md">{value.name}</Heading>
-                  </CardBody>
-
-                  <CardFooter>
-                    {isConnected ? (
-                      <Button
-                        variant="solid"
-                        colorScheme={'red'}
-                        onClick={onOpen}
-                      >
-                        Join Stream
-                      </Button>
-                    ) : (
-                      <ConnectButton label="Sign in" />
-                    )}
-                    <Modal isOpen={isOpen} onClose={onClose}>
-                      <ModalOverlay />
-                      <ModalContent>
-                        <ModalHeader>{value.name}</ModalHeader>
-                        <ModalCloseButton />
-                        <ModalBody>
-                          <Player
-                            title={value.name}
-                            playbackId={value.playbackId}
-                            autoPlay
-                            muted
-                          />
-                        </ModalBody>
-
-                        <ModalFooter>
-                          <Button colorScheme="red" mr={3} onClick={onClose}>
-                            Leave Stream
-                          </Button>
-                          {/* <Button variant="ghost">Secondary Action</Button> */}
-                        </ModalFooter>
-                      </ModalContent>
-                    </Modal>
-                  </CardFooter>
-                </Stack>
-              </Card>
+            (value: {
+              id: string
+              name: string
+              playbackId: string
+              address: string
+            }) => (
+              <Stream
+                key={value.id}
+                name={value.name}
+                playbackId={value.playbackId}
+                creatorAddress={value.address}
+              />
             ),
           )}
         </Box>

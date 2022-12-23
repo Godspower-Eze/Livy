@@ -26,7 +26,7 @@ const queryClient = new QueryClient()
 // RainbowKit Configuration
 
 const { chains, provider } = configureChains(
-  [chain.polygonMumbai, chain.polygon],
+  [chain.polygonMumbai],
   [
     alchemyProvider({
       apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY as string,

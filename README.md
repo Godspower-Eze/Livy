@@ -1,13 +1,5 @@
 # Livy - Web3 Livestreaming
 
-## Tech Stack
-
-- NextJs for UI and Data API
-- Livepeer protocol for Video Streaming Infrastructure
-- Rainbowkit and Wagmi for wallet connection and interaction
-
-## Use of Product
-
 Livy is a platform for live streaming built on Livepeer Protocol
 
 ## Description
@@ -16,4 +8,8 @@ A creator connects their wallet and starts a livestream. A stream key is provide
 
 A user sees all the active and can join any.
 
+[Smart Contracts](https://github.com/Godspower-Eze/Livy-Contracts)
+
 [Live Demo](https://livy.vercel.app/)
+
+[Video Demo](https://youtu.be/kiHSBch7z60)
